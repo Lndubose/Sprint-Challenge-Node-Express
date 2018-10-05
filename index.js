@@ -19,7 +19,7 @@ const checking = (req, res, next) => {
 server.get('/projects', (req, res) => {
   projectDb.get()
     .then(response => res.status(200).json(response))
-    .catch(err => res.status(500).json({error: "Server error"}));
+    .catch(err => res.status(500).json({error: `Server error --> ${err} `}));
 });
 
 server.post('/projects', checking, (req, res) => {
@@ -27,7 +27,7 @@ server.post('/projects', checking, (req, res) => {
   const newProject = { name, description }
   projectDb.insert(newProject)
     .then(response => res.status(201).json(response))
-    .catch(err => res.statusCode(500).json({ error: "Server error"}));
+    .catch(err => res.statusCode(500).json({ error: `Server error --> ${err} `}));
 });
 
 server.delete('/projects/:projectId', (req, res) => {
@@ -40,7 +40,17 @@ server.delete('/projects/:projectId', (req, res) => {
         res.status(400).json({ error: "No project with that id."})
       }
     })
-    .catch(err => res.status(500).json({ error: "Server error" + err }));
+    .catch(err => res.status(500).json({ error: `Server error --> ${err} ` }));
 });
+
+server.put('/projects/:projectId', checking, (req, res) => {
+  const { projectId } = req.params;
+  const updateProject = req.body;
+  projectDb.update(projectId, updateProject)
+    .then(response => res.status(200).json(response))
+    .catch(err => res.status(500).json({ error: `Server error --> ${err} `}));
+});
+
+
 
 server.listen(port, () => console.log(`\n===Server running on ${port}===\n`));

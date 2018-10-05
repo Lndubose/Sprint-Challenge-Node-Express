@@ -7,7 +7,9 @@ const port = 7013;
 
 server.use(express.json(), helmet());
 
-const checking = (req, res, next) => {
+// ===Middleware===
+
+const checkingProject = (req, res, next) => {
   const { name, description } = req.body;
   if(!name || !description) {
     res.status(400).json({error: "Need a name and description"})
@@ -16,13 +18,31 @@ const checking = (req, res, next) => {
   }
 }
 
+const checkingAction = (req, res, next) => {
+  const { notes, description, project_id } = req.body;
+  if(!notes || !description || !project_id) {
+    res.status(400).json({error: "Need a description, notes, and the user that is adding the action."})
+  } else {
+    next();
+  }
+}
+
+// ====Project CRUD methods====
+
 server.get('/projects', (req, res) => {
   projectDb.get()
     .then(response => res.status(200).json(response))
     .catch(err => res.status(500).json({error: `Server error --> ${err} `}));
 });
 
-server.post('/projects', checking, (req, res) => {
+server.get('/projects/actions/:projectId', (req, res) => {
+  const { projectId } = req.params;
+  projectDb.get(projectId)
+    .then(response => res.status(200).json(response))
+    .catch(err => res.status(500).json({error: `Server error --> ${err} `}));
+});
+
+server.post('/projects', checkingProject, (req, res) => {
   const { name, description } = req.body;
   const newProject = { name, description }
   projectDb.insert(newProject)
@@ -43,7 +63,7 @@ server.delete('/projects/:projectId', (req, res) => {
     .catch(err => res.status(500).json({ error: `Server error --> ${err} ` }));
 });
 
-server.put('/projects/:projectId', checking, (req, res) => {
+server.put('/projects/:projectId', checkingProject, (req, res) => {
   const { projectId } = req.params;
   const updateProject = req.body;
   projectDb.update(projectId, updateProject)
@@ -51,6 +71,19 @@ server.put('/projects/:projectId', checking, (req, res) => {
     .catch(err => res.status(500).json({ error: `Server error --> ${err} `}));
 });
 
+// ====Action CRUD methods====
+
+server.get('/actions', (req, res) => {
+  actionDb.get()
+    .then(response => res.status(200).json(response))
+    .catch(err => res.status(500).json({ error: `Server error --> ${err} `}));
+});
+
+server.post('/actions', checkingAction, (req, res) => {
+  actionDb.insert(req.body)
+    .then(response => res.status(201).json(response))
+    .catch(err => res.status(500).json({ error: `Server error --> ${err} `}));
+});
 
 
 server.listen(port, () => console.log(`\n===Server running on ${port}===\n`));

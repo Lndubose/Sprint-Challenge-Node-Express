@@ -18,10 +18,19 @@ const checkingProject = (req, res, next) => {
   }
 }
 
-const checkingAction = (req, res, next) => {
+const checkingPostAction = (req, res, next) => {
   const { notes, description, project_id } = req.body;
   if(!notes || !description || !project_id) {
     res.status(400).json({error: "Need a description, notes, and the user that is adding the action."})
+  } else {
+    next();
+  }
+}
+
+const checkingPutAction = (req, res, next) => {
+  const { description, notes } = req.body;
+  if(!notes || !description ) {
+    res.status(400).json({error: "Need a description and notes to update action"})
   } else {
     next();
   }
@@ -79,10 +88,31 @@ server.get('/actions', (req, res) => {
     .catch(err => res.status(500).json({ error: `Server error --> ${err} `}));
 });
 
-server.post('/actions', checkingAction, (req, res) => {
+server.post('/actions', checkingPostAction, (req, res) => {
   actionDb.insert(req.body)
     .then(response => res.status(201).json(response))
     .catch(err => res.status(500).json({ error: `Server error --> ${err} `}));
+});
+
+server.delete('/actions/:actionId', (req, res) => {
+  const { actionId } = req.params;
+  actionDb.remove(actionId)
+    .then(response => {
+      if(response) {
+      res.status(200).json({message: "Delete project success."})
+    } else {
+      res.status(400).json({ error: "No project with that id."})
+    }
+  })
+    .catch(err => res.status(500).json({ error: `Server error --> ${err}` }));
+});
+
+server.put('/actions/:actionId', checkingPutAction, (req, res) => {
+  const { actionId } = req.params;
+  const updateAction = req.body;
+  actionDb.update(actionId, updateAction)
+    .then(response => res.status(200).json(response))
+    .catch(err => res.status(500).json({ error: `Server error --> ${err}` }));
 });
 
 

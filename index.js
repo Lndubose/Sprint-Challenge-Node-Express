@@ -30,4 +30,17 @@ server.post('/projects', checking, (req, res) => {
     .catch(err => res.statusCode(500).json({ error: "Server error"}));
 });
 
+server.delete('/projects/:projectId', (req, res) => {
+  const { projectId } = req.params;
+  projectDb.remove(projectId)
+    .then(response => {
+      if(response) {
+        res.status(200).json({message: "Delete project success."})
+      } else {
+        res.status(400).json({ error: "No project with that id."})
+      }
+    })
+    .catch(err => res.status(500).json({ error: "Server error" + err }));
+});
+
 server.listen(port, () => console.log(`\n===Server running on ${port}===\n`));
